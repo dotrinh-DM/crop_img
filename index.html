@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Crop Box</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #image-container {
+      position: relative;
+      display: inline-block;
+      margin-top: 20px;
+    }
+    #uploaded-image {
+      display: none;
+      max-width: 100%;
+    }
+    #crop-box {
+      position: absolute;
+      border: 2px dashed gray;
+      box-sizing: border-box;
+    }
+    #crop-box.centered {
+      border: 2px solid red;
+    }
+    .resize-handle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: blue;
+      bottom: 0;
+      right: 0;
+      cursor: se-resize;
+    }
+    #download-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Upload Image and Crop</h2>
+  <input type="file" accept="image/*" id="file-input" />
+  <br>
+  <button id="download-btn" style="display:none;">Crop & Download</button>
+
+  <div id="image-container">
+    <img id="uploaded-image" />
+    <div id="crop-box">
+      <div class="resize-handle"></div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const uploadedImage = document.getElementById('uploaded-image');
+    const cropBox = document.getElementById('crop-box');
+    const resizeHandle = document.querySelector('.resize-handle');
+    const container = document.getElementById('image-container');
+    const downloadBtn = document.getElementById('download-btn');
+
+    let isDragging = false, isResizing = false;
+    let startX, startY, startLeft, startTop, startWidth, startHeight;
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        uploadedImage.src = event.target.result;
+        uploadedImage.style.display = 'block';
+        downloadBtn.style.display = 'inline-block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    uploadedImage.onload = () => {
+      const width = uploadedImage.offsetWidth;
+      const height = uploadedImage.offsetHeight;
+      const cropWidth = width * 0.4;
+      const cropHeight = height * 0.4;
+      const left = (width - cropWidth) / 2;
+      const top = (height - cropHeight) / 2;
+
+      cropBox.style.width = cropWidth + 'px';
+      cropBox.style.height = cropHeight + 'px';
+      cropBox.style.left = left + 'px';
+      cropBox.style.top = top + 'px';
+      cropBox.style.display = 'block';
+    };
+
+    // Move crop box
+    cropBox.addEventListener('mousedown', (e) => {
+      if (e.target === resizeHandle) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = cropBox.offsetLeft;
+      startTop = cropBox.offsetTop;
+    });
+
+    // Resize crop box
+    resizeHandle.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      isResizing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = cropBox.offsetWidth;
+      startHeight = cropBox.offsetHeight;
+      startLeft = cropBox.offsetLeft;
+      startTop = cropBox.offsetTop;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        cropBox.style.left = startLeft + dx + 'px';
+        cropBox.style.top = startTop + dy + 'px';
+        checkCenter();
+      } else if (isResizing) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const newSize = Math.max(startWidth + dx, startHeight + dy);
+        cropBox.style.width = newSize + 'px';
+        cropBox.style.height = newSize + 'px';
+        cropBox.style.left = (startLeft + startWidth / 2 - newSize / 2) + 'px';
+        cropBox.style.top = (startTop + startHeight / 2 - newSize / 2) + 'px';
+        checkCenter();
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      isResizing = false;
+    });
+
+    function checkCenter() {
+      const cropRect = cropBox.getBoundingClientRect();
+      const imgRect = uploadedImage.getBoundingClientRect();
+      const cx = cropRect.left + cropRect.width / 2;
+      const cy = cropRect.top + cropRect.height / 2;
+      const icx = imgRect.left + imgRect.width / 2;
+      const icy = imgRect.top + imgRect.height / 2;
+      const threshold = 10;
+      if (Math.abs(cx - icx) < threshold && Math.abs(cy - icy) < threshold) {
+        cropBox.classList.add('centered');
+      } else {
+        cropBox.classList.remove('centered');
+      }
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      const cropRect = cropBox.getBoundingClientRect();
+      const imgRect = uploadedImage.getBoundingClientRect();
+      const scaleX = uploadedImage.naturalWidth / uploadedImage.width;
+      const scaleY = uploadedImage.naturalHeight / uploadedImage.height;
+      const sx = (cropRect.left - imgRect.left) * scaleX;
+      const sy = (cropRect.top - imgRect.top) * scaleY;
+      const sw = cropBox.offsetWidth * scaleX;
+      const sh = cropBox.offsetHeight * scaleY;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(uploadedImage, sx, sy, sw, sh, 0, 0, sw, sh);
+
+      const link = document.createElement('a');
+      link.download = 'cropped.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  </script>
+
+</body>
+</html>
