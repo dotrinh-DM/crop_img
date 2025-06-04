@@ -40,6 +40,24 @@
       padding: 10px 20px;
       font-size: 16px;
     }
+    .guide-line {
+      position: absolute;
+      background-color: red;
+      z-index: 10;
+      display: none;
+    }
+
+    #vertical-line {
+      width: 1px;
+      height: 100%;
+      top: 0;
+    }
+
+    #horizontal-line {
+      height: 1px;
+      width: 100%;
+      left: 0;
+    }
   </style>
 </head>
 <body>
@@ -54,6 +72,8 @@
     <div id="crop-box">
       <div class="resize-handle"></div>
     </div>
+    <div id="vertical-line" class="guide-line"></div>
+    <div id="horizontal-line" class="guide-line"></div>
   </div>
 
   <script>
@@ -63,6 +83,8 @@
     const resizeHandle = document.querySelector('.resize-handle');
     const container = document.getElementById('image-container');
     const downloadBtn = document.getElementById('download-btn');
+    const verticalLine = document.getElementById('vertical-line');
+    const horizontalLine = document.getElementById('horizontal-line');
 
     let isDragging = false, isResizing = false;
     let startX, startY, startLeft, startTop, startWidth, startHeight;
@@ -92,6 +114,9 @@
       cropBox.style.left = left + 'px';
       cropBox.style.top = top + 'px';
       cropBox.style.display = 'block';
+
+      verticalLine.style.height = uploadedImage.offsetHeight + 'px';
+      horizontalLine.style.width = uploadedImage.offsetWidth + 'px';
     };
 
     // Move crop box
@@ -148,6 +173,23 @@
       const icx = imgRect.left + imgRect.width / 2;
       const icy = imgRect.top + imgRect.height / 2;
       const threshold = 10;
+
+      // vertical line at center x
+      if (Math.abs(cx - icx) < threshold) {
+        verticalLine.style.left = (icx - imgRect.left) + 'px';
+        verticalLine.style.display = 'block';
+      } else {
+        verticalLine.style.display = 'none';
+      }
+
+      // horizontal line at center y
+      if (Math.abs(cy - icy) < threshold) {
+        horizontalLine.style.top = (icy - imgRect.top) + 'px';
+        horizontalLine.style.display = 'block';
+      } else {
+        horizontalLine.style.display = 'none';
+      }
+
       if (Math.abs(cx - icx) < threshold && Math.abs(cy - icy) < threshold) {
         cropBox.classList.add('centered');
       } else {
