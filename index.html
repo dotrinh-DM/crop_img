@@ -166,36 +166,41 @@
     });
 
     function checkCenter() {
-      const cropRect = cropBox.getBoundingClientRect();
-      const imgRect = uploadedImage.getBoundingClientRect();
-      const cx = cropRect.left + cropRect.width / 2;
-      const cy = cropRect.top + cropRect.height / 2;
-      const icx = imgRect.left + imgRect.width / 2;
-      const icy = imgRect.top + imgRect.height / 2;
-      const threshold = 1;
+  const cropRect = cropBox.getBoundingClientRect();
+  const imgRect = uploadedImage.getBoundingClientRect();
+  const cx = cropRect.left + cropRect.width / 2;
+  const cy = cropRect.top + cropRect.height / 2;
+  const icx = imgRect.left + imgRect.width / 2;
+  const icy = imgRect.top + imgRect.height / 2;
+  const threshold = 10;
 
-      // vertical line at center x
-      if (Math.abs(cx - icx) < threshold) {
-        verticalLine.style.left = (icx - imgRect.left) + 'px';
-        verticalLine.style.display = 'block';
-      } else {
-        verticalLine.style.display = 'none';
-      }
+  const closeToCenterX = Math.abs(cx - icx) < threshold;
+  const closeToCenterY = Math.abs(cy - icy) < threshold;
 
-      // horizontal line at center y
-      if (Math.abs(cy - icy) < threshold) {
-        horizontalLine.style.top = (icy - imgRect.top) + 'px';
-        horizontalLine.style.display = 'block';
-      } else {
-        horizontalLine.style.display = 'none';
-      }
+  if (closeToCenterX) {
+    const newLeft = icx - cropRect.width / 2 - imgRect.left;
+    cropBox.style.left = newLeft + 'px';
+    verticalLine.style.left = (icx - imgRect.left) + 'px';
+    verticalLine.style.display = 'block';
+  } else {
+    verticalLine.style.display = 'none';
+  }
 
-      if (Math.abs(cx - icx) < threshold && Math.abs(cy - icy) < threshold) {
-        cropBox.classList.add('centered');
-      } else {
-        cropBox.classList.remove('centered');
-      }
-    }
+  if (closeToCenterY) {
+    const newTop = icy - cropRect.height / 2 - imgRect.top;
+    cropBox.style.top = newTop + 'px';
+    horizontalLine.style.top = (icy - imgRect.top) + 'px';
+    horizontalLine.style.display = 'block';
+  } else {
+    horizontalLine.style.display = 'none';
+  }
+
+  if (closeToCenterX && closeToCenterY) {
+    cropBox.classList.add('centered');
+  } else {
+    cropBox.classList.remove('centered');
+  }
+}
 
     downloadBtn.addEventListener('click', () => {
       const cropRect = cropBox.getBoundingClientRect();
