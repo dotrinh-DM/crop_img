@@ -24,7 +24,7 @@
       box-sizing: border-box;
     }
     #crop-box.centered {
-      border: 2px solid red;
+      border: 4px solid blue;
     }
     .resize-handle {
       position: absolute;
@@ -172,7 +172,7 @@
       const cy = cropRect.top + cropRect.height / 2;
       const icx = imgRect.left + imgRect.width / 2;
       const icy = imgRect.top + imgRect.height / 2;
-      const threshold = 10;
+      const threshold = 1;
 
       // vertical line at center x
       if (Math.abs(cx - icx) < threshold) {
